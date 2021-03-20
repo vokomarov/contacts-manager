@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\API\ContactsController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -14,6 +15,13 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware('auth:api')->get('/user', function (Request $request) {
-    return $request->user();
+Route::group([
+    'middleware' => 'api',
+], function () {
+    Route::apiResource('contacts', ContactsController::class)->missing(function (Request $request) {
+        return response()->json([
+            'message' => 'Contact not found.',
+            'error' => 'Unable to find contact by given ID.'
+        ], \Illuminate\Http\Response::HTTP_NOT_FOUND);
+    });;
 });
