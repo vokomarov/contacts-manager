@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\API\Auth\LoginController;
+use App\Http\Controllers\API\ContactsController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -14,6 +16,15 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware('auth:api')->get('/user', function (Request $request) {
-    return $request->user();
+Route::post('/auth/login', [LoginController::class, 'login'])->name('auth.login');
+
+Route::group([
+    'middleware' => 'auth:sanctum',
+], function () {
+    Route::apiResource('contacts', ContactsController::class)->missing(function (Request $request) {
+        return response()->json([
+            'message' => 'Contact not found.',
+            'error' => 'Unable to find contact by given ID.'
+        ], \Illuminate\Http\Response::HTTP_NOT_FOUND);
+    });
 });
