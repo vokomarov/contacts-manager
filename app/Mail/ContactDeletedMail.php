@@ -14,7 +14,7 @@ class ContactDeletedMail extends Mailable implements ShouldQueue
     /**
      * @var \App\Models\Contact
      */
-    protected $contact;
+    public $contact;
 
     /**
      * Create a new message instance.
@@ -33,8 +33,7 @@ class ContactDeletedMail extends Mailable implements ShouldQueue
      */
     public function build()
     {
-        return $this->from(config('mail.from.address'), config('mail.from.name'))->markdown('emails.contact-deleted', [
-            'contact' => $this->contact
-        ]);
+        return $this->from(config('mail.from.address'), config('mail.from.name'))
+                    ->markdown('emails.contact-deleted');
     }
 }
