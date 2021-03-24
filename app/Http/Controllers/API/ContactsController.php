@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers\API;
 
-use App\Http\Controllers\Controller;
 use App\Http\Requests\Contact\StoreRequest;
 use App\Http\Requests\Contact\UpdateRequest;
 use App\Http\Resources\ContactResource;
 use App\Models\Contact;
+use Bouncer;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
 
@@ -15,10 +15,14 @@ class ContactsController extends Controller
     /**
      * Display a listing of the resource.
      *
-     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
+     * @return \Illuminate\Http\JsonResponse|\Illuminate\Http\Resources\Json\AnonymousResourceCollection
      */
     public function index()
     {
+        if (Bouncer::cannot('read-contacts')) {
+            return $this->forbidden();
+        }
+
         return ContactResource::collection(Contact::all());
     }
 
@@ -30,6 +34,10 @@ class ContactsController extends Controller
      */
     public function store(StoreRequest $request)
     {
+        if (Bouncer::cannot('create-contacts')) {
+            return $this->forbidden();
+        }
+
         $user = Auth::user();
 
         try {
@@ -54,10 +62,14 @@ class ContactsController extends Controller
      * Display the specified resource.
      *
      * @param  \App\Models\Contact  $contact
-     * @return \App\Http\Resources\ContactResource
+     * @return \App\Http\Resources\ContactResource|\Illuminate\Http\JsonResponse
      */
     public function show(Contact $contact)
     {
+        if (Bouncer::cannot('read-contacts')) {
+            return $this->forbidden();
+        }
+
         return new ContactResource($contact);
     }
 
@@ -70,6 +82,10 @@ class ContactsController extends Controller
      */
     public function update(Contact $contact, UpdateRequest $request)
     {
+        if (Bouncer::cannot('update-contacts')) {
+            return $this->forbidden();
+        }
+
         $contact->fill($request->only([
             'name',
             'lastname',
@@ -98,6 +114,10 @@ class ContactsController extends Controller
      */
     public function destroy(Contact $contact)
     {
+        if (Bouncer::cannot('delete-contacts')) {
+            return $this->forbidden();
+        }
+
         try {
             $contact->delete();
         } catch (\Exception $exception) {

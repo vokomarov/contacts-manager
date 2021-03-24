@@ -6,12 +6,15 @@ use App\Events\ContactDeleted;
 use App\Mail\ContactDeletedMail;
 use App\Models\Contact;
 use App\Models\User;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
 class ContactDeletedTest extends TestCase
 {
+    use DatabaseTransactions;
+
     public function testEventDispatched()
     {
         Event::fake();

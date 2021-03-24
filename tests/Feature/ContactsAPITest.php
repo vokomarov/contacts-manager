@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Events\ContactDeleted;
 use App\Models\Contact;
 use App\Models\User;
+use Bouncer;
 use Illuminate\Foundation\Testing\Concerns\InteractsWithDatabase;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Http\Request;
@@ -25,12 +26,20 @@ class ContactsAPITest extends TestCase
         ]);
     }
 
-    protected function getAuthHeaders(): array
+    protected function getAuthHeaders(string $role = null, &$user = null): array
     {
-        $user = User::factory()->create();
+        if ($user === null) {
+            $user = User::factory()->create();
+        }
+
+        $token = $user->createToken(random_int(100, 999))->plainTextToken;
+
+        Bouncer::dontCache();
+
+        Bouncer::assign($role ?? 'reader')->to($user);
 
         return [
-            'Authorization' => 'Bearer ' . $user->createToken('test')->plainTextToken
+            'Authorization' => 'Bearer ' . $token
         ];
     }
 
@@ -68,23 +77,25 @@ class ContactsAPITest extends TestCase
     {
         $contact = Contact::factory()->make();
 
-        $response = $this->json(Request::METHOD_POST, '/api/contacts', [
+        $body = [
             'name' => $contact->name,
             'lastname' => $contact->lastname,
             'email' => $contact->email,
             'company_name' => $contact->company_name,
             'company_job_title' => $contact->company_job_title,
-        ], $this->getAuthHeaders());
+        ];
+
+        $user = null;
+
+        $response = $this->json(Request::METHOD_POST, '/api/contacts', $body, $this->getAuthHeaders(null, $user));
+
+        $response->assertStatus(Response::HTTP_FORBIDDEN);
+
+        $response = $this->json(Request::METHOD_POST, '/api/contacts', $body, $this->getAuthHeaders('moderator', $user));
 
         $response->assertStatus(Response::HTTP_CREATED);
 
-        $response->assertJsonFragment([
-            'name' => $contact->name,
-            'lastname' => $contact->lastname,
-            'email' => $contact->email,
-            'company_name' => $contact->company_name,
-            'company_job_title' => $contact->company_job_title,
-        ]);
+        $response->assertJsonFragment($body);
 
         $this->assertDatabaseHas('contacts', [
             'name' => $contact->name,
@@ -99,13 +110,25 @@ class ContactsAPITest extends TestCase
 
         $newContact = Contact::factory()->make();
 
-        $response = $this->json(Request::METHOD_PATCH, "/api/contacts/{$contact->id}", [
+        $body = [
             'name' => $newContact->name,
             'lastname' => $newContact->lastname,
             'email' => $newContact->email,
             'company_name' => $newContact->company_name,
             'company_job_title' => $newContact->company_job_title,
-        ], $this->getAuthHeaders());
+        ];
+
+        $user = null;
+
+        $response = $this->json(Request::METHOD_PATCH, "/api/contacts/{$contact->id}", $body, $this->getAuthHeaders(null, $user));
+
+        $response->assertStatus(Response::HTTP_FORBIDDEN);
+
+        $response = $this->json(Request::METHOD_PATCH, "/api/contacts/{$contact->id}", $body, $this->getAuthHeaders('moderator', $user));
+
+        $response->assertStatus(Response::HTTP_FORBIDDEN);
+
+        $response = $this->json(Request::METHOD_PATCH, "/api/contacts/{$contact->id}", $body, $this->getAuthHeaders('admin', $user));
 
         $response->assertOk();
 
@@ -138,7 +161,17 @@ class ContactsAPITest extends TestCase
 
         $contact = $this->createContact();
 
-        $response = $this->json(Request::METHOD_DELETE, "/api/contacts/{$contact->id}", [], $this->getAuthHeaders());
+        $user = null;
+
+        $response = $this->json(Request::METHOD_DELETE, "/api/contacts/{$contact->id}", [], $this->getAuthHeaders(null, $user));
+
+        $response->assertStatus(Response::HTTP_FORBIDDEN);
+
+        $response = $this->json(Request::METHOD_DELETE, "/api/contacts/{$contact->id}", [], $this->getAuthHeaders('moderator', $user));
+
+        $response->assertStatus(Response::HTTP_FORBIDDEN);
+
+        $response = $this->json(Request::METHOD_DELETE, "/api/contacts/{$contact->id}", [], $this->getAuthHeaders('admin', $user));
 
         $response->assertOk();
 
