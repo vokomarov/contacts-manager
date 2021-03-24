@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\User;
+use Bouncer;
 use Illuminate\Foundation\Testing\Concerns\InteractsWithDatabase;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Http\Request;
@@ -28,6 +29,8 @@ class AuthAPITest extends TestCase
         $user = User::factory()->create([
             'password' => Hash::make('secret'),
         ]);
+
+        Bouncer::assign('reader')->to($user);
 
         $response = $this->json(Request::METHOD_POST, '/api/auth/login', [
             'email' => $user->email,
