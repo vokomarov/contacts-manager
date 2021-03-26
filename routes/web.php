@@ -18,6 +18,6 @@ use Illuminate\Support\Facades\Route;
 Route::post('/login', [LoginController::class, 'login'])->name('auth.login');
 Route::any('/logout', [LogoutController::class, 'logout'])->name('auth.logout');
 
-Route::get('/{any?}', function () {
+Route::fallback(function () {
     return view('welcome');
 });
