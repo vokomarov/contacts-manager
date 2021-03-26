@@ -21,6 +21,11 @@ const routes = [
         component: () => import('./Views/Contacts.vue'),
         name: 'contacts',
     },
+    {
+        path: '/contacts/create',
+        component: () => import('./Views/ContactCreate.vue'),
+        name: 'contacts.create',
+    },
 ];
 
 const router = new VueRouter({

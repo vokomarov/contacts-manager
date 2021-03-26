@@ -2,7 +2,7 @@
     <b-card header-tag="header">
         <template v-slot:header>
             Contacts
-            <b-button variant="primary" size="sm">Create</b-button>
+            <b-button variant="primary" size="sm" :to="{name: 'contacts.create'}">Create</b-button>
         </template>
 
         <table class="table b-table table-sm">
